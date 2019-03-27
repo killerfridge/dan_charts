@@ -13,6 +13,7 @@ def bullet_chart(
         size: tuple=(10,7),
         title: str=None,
         x_label: str=None,
+        colors: dict=None,
         ):
     """
     param data: pd.DataFrame - dataframe containing the data to be plotted
@@ -56,12 +57,43 @@ def bullet_chart(
         fig, ax = plt.subplots(figsize=size)
 
 
+    if not isinstance(colors: dict):
+        raise TypeError(f'colors parameter should be a dictionary, not {type(colors)}')
+
+    if not colors:
+        colors = {
+                'target': pc.tableau_hex[0],
+                'bar': pc.tableau_hex[15],
+                'x_values': pc.tableau_hex[6]
+                }
+
+    try:
+        bar_color = colors['bar']
+    except:
+        bar_color = pc.tableau_hex[15]
+
+    try:
+        target_color = colors['target']
+    except:
+        target_color = pc.tableau_hex[0]
+
+    try:
+        x_color = colors['x_values']
+    except:
+        x_color = pc.tableau_hex[6]
+
     # take the the raw data from the dataframe
 
     y_labels = grouped[y].values
     x_values = grouped[x].values
     bar_values = grouped[bar].values
     target_values = grouped[target].values
+
+    # Get the height of the bar based on the maximum values
+
+    height = max(max(x_values), max(bar_values), max(target_values))
+
+    height = height / 10
 
     # Loop through the Y labels, and plot the charts
 
@@ -70,7 +102,31 @@ def bullet_chart(
         # If the number of axis is greater than one, assign the current one to ax
         if number_of_axis > 1:
             ax = axarr[i]
+        # plot the background bar 
+        ax.barh([1], bar_values[i], color=bar_color) 
 
-        # TODO complete the rest of the function - plot the bars, sub_targets, targets, title etc.
+        # If the x value is less than the target value, plot it red, else green
+
+        if x_values[i] > target_values[i]:
+            x_color = pc.tableau_hex[4]
             
+        # plot the x value bar
+
+        ax.barh([1], x_values[i], height=height/3, color=x_color)
+
+
+        # plot the target line
+
+        ax.vlines(target_values[i], linewidth=3, color=target_color)
+
+        fig.subplots_adjust(hspace=0)
+
+    # set the final axes label
+    ax.set_xlabel(x_label)
+
+    if number_of_axis == 1:
+        axarr = ax
+
+    return fig, axarr
+
 
