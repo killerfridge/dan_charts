@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import philips_colors as pc
+from seaborn import color_palette
 
 
 def bullet_chart(
@@ -14,8 +15,10 @@ def bullet_chart(
         title: str=None,
         x_label: str=None,
         colors: dict=None,
+        palette: str='Blues_r'
         ):
     """
+    bullet_charts takes a DataFrame, and plots out a bullet chart. 
     param data: pd.DataFrame - dataframe containing the data to be plotted
     param x: str - column name that contains the x values
     param y: list - list of columns to group for the y axis
@@ -28,6 +31,10 @@ def bullet_chart(
     returns tuple: matplotlib figure and axis
     """
 
+    # Set multiple targets to be false - if target variable is a string then there is only 1 target bar
+    # if it's a list, then there are multiple target bars that need to be plotted
+    multiple_targets = False
+
     if not isinstance(data, pd.DataFrame):
         raise TypeError(f'data parameter should be of type pd.DataFrame, not {type(data)}')
     if not isinstance(x, str):
@@ -35,7 +42,10 @@ def bullet_chart(
     if not isinstance(target, str):
         raise TypeError(f'target parameter should be of type str, not {type(target)}')
     if not isinstance(bar, str):
-        raise TypeError(f'bar parameter should be of type str, not {type(bar)}')
+        if not isinstance(bar, list):
+            raise TypeError(f'bar parameter should be a list or string, not {type(bar)}')
+        # multiple targets are a list, therefore more than one target bar needs to be plotted
+        multiple_targets = True
     if not isinstance(size, tuple):
         raise TypeError(f'size parameter should be of type tuple, not {type(size)}')
     if not isinstance(title, str):
@@ -56,8 +66,7 @@ def bullet_chart(
     else:
         fig, ax = plt.subplots(figsize=size)
 
-
-    if not isinstance(colors: dict):
+    if not isinstance(colors, dict):
         raise TypeError(f'colors parameter should be a dictionary, not {type(colors)}')
 
     if not colors:
@@ -100,10 +109,18 @@ def bullet_chart(
     for i, y_label in enumerate(y_labels):
 
         # If the number of axis is greater than one, assign the current one to ax
-        if number_of_axis > 1:
+        if number_of_axes > 1:
             ax = axarr[i]
         # plot the background bar 
-        ax.barh([1], bar_values[i], color=bar_color) 
+        # if multiple background targets, loop through and plot on top of each other
+        if multiple_targets:
+            prev_lim = 0
+            p_colors = color_palette(palette=palette, len(bar_values))
+            for j, b_value in enumerate(bar_values[i]):
+                ax.barh([1], b_value - prev_lim, left=prev_lim, p_colors[j])
+                prev_lim = b_value
+        else:
+            ax.barh([1], bar_values[i], color=bar_color)
 
         # If the x value is less than the target value, plot it red, else green
 
@@ -113,7 +130,6 @@ def bullet_chart(
         # plot the x value bar
 
         ax.barh([1], x_values[i], height=height/3, color=x_color)
-
 
         # plot the target line
 
