@@ -115,9 +115,9 @@ def bullet_chart(
         # if multiple background targets, loop through and plot on top of each other
         if multiple_targets:
             prev_lim = 0
-            p_colors = color_palette(palette=palette, len(bar_values))
+            p_colors = color_palette(palette, len(bar_values))
             for j, b_value in enumerate(bar_values[i]):
-                ax.barh([1], b_value - prev_lim, left=prev_lim, p_colors[j])
+                ax.barh([1], b_value - prev_lim, left=prev_lim, color=p_colors[j])
                 prev_lim = b_value
         else:
             ax.barh([1], bar_values[i], color=bar_color)
@@ -140,7 +140,7 @@ def bullet_chart(
     # set the final axes label
     ax.set_xlabel(x_label)
 
-    if number_of_axis == 1:
+    if number_of_axes == 1:
         axarr = ax
 
     return fig, axarr
